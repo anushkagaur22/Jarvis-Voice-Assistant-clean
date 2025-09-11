@@ -1,41 +1,57 @@
+import os
+import google.generativeai as genai
+from dotenv import load_dotenv
 import speech_recognition as sr
 import webbrowser
 import pyttsx3
 import musicLibrary
 import requests
-import ollama
 
+# ----------------- CONFIG -----------------
+# Load API key from API.env
+load_dotenv("API.env")
+api_key = os.getenv("GOOGLE_API_KEY")
 
+if not api_key:
+    print("❌ GOOGLE_API_KEY not found in API.env")
+    exit()
+
+# Configure Gemini
+genai.configure(api_key=api_key)
+
+# Initialize Gemini model
+system_instruction = "You are Jarvis, a helpful voice assistant. Reply briefly and clearly."
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-flash-latest",
+    system_instruction=system_instruction
+)
+chat = model.start_chat(history=[])
+
+# Initialize speech engine
 engine = pyttsx3.init()
-newsapi = "cae53adfbb9c4f6d965a1789c434b8b0"  # Replace with your valid API key
 
+# News API key
+newsapi = "cae53adfbb9c4f6d965a1789c434b8b0"  # replace with your valid key
+
+# ----------------- FUNCTIONS -----------------
 def speak(text):
+    """Text-to-Speech"""
+    print("Jarvis:", text)
     engine.say(text)
     engine.runAndWait()
 
 def aiprocess(command):
-    messages = [
-        {"role": "system", "content": "You are Jarvis, a helpful assistant. Give short response."},
-        {"role": "user", "content": command}
-    ]
+    """Send user command to Google Gemini"""
     try:
-        response = ollama.chat(model="deepseek-r1:1.5b", messages=messages)
-        print("Ollama Response:", response)  # 👈 Debug print
-        
-        if "message" in response:
-            reply = response["message"]["content"]
-        elif "messages" in response:
-            reply = response["messages"][-1]["content"]
-        else:
-            reply = "Sorry, I didn’t get any response."
-        
+        response = chat.send_message(command)
+        reply = response.text.strip() if response.text else "Sorry, I didn’t get a response."
         speak(reply)
     except Exception as e:
-        print("Ollama Error:", e)
+        print("Gemini Error:", e)
         speak("Sorry, I couldn’t process that.")
 
-
 def processCommand(c):
+    """Handle user commands"""
     c = c.lower()
 
     if "open google" in c:
@@ -83,10 +99,10 @@ def processCommand(c):
             speak("Failed to fetch news.")
 
     else:
-        # Ask AI (Jarvis brain)
+        # Ask Gemini AI
         aiprocess(c)
 
-
+# ----------------- MAIN LOOP -----------------
 if __name__ == "__main__":
     speak("Initializing Jarvis....")
     recognizer = sr.Recognizer()
