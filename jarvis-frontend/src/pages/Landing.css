@@ -1,0 +1,172 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+.landing-root {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, #fffbf0 0%, #fff0f5 100%);
+  font-family: 'Outfit', sans-serif;
+  overflow: hidden;
+  padding: 40px; /* Prevent edge touching */
+}
+
+/* Background Orbs */
+.bg-glow {
+  position: absolute;
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(circle, rgba(255, 143, 177, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  z-index: 0;
+}
+.top-left { top: -30%; left: -10%; }
+.bottom-right { bottom: -30%; right: -10%; }
+
+/* --- THE WIDE GLASS PANEL (Desktop Fix) --- */
+.landing-glass-panel {
+  display: flex; /* Horizontal Layout */
+  width: 100%;
+  max-width: 1100px; /* Wide desktop width */
+  min-height: 600px;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 40px;
+  box-shadow: 0 30px 80px rgba(140, 47, 60, 0.08);
+  overflow: hidden;
+  position: relative;
+  z-index: 10;
+}
+
+/* LEFT SIDE: Content */
+.landing-content {
+  flex: 1;
+  padding: 80px 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start; /* Left align text */
+}
+
+/* Badge */
+.landing-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #8c2f3c;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+.live-dot { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.3); }
+
+/* Typography */
+.landing-title {
+  font-size: 4rem; /* Big Desktop Text */
+  font-weight: 800;
+  line-height: 1.1;
+  color: #2d161a;
+  margin-bottom: 20px;
+}
+.gradient-text {
+  background: linear-gradient(135deg, #8c2f3c 0%, #ff5d8d 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.landing-subtitle {
+  font-size: 1.2rem;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 40px;
+  max-width: 90%;
+}
+
+/* Stats Row */
+.landing-stats {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 40px;
+}
+.stat-item { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #555; font-size: 0.95rem; }
+.icon-y { color: #f59e0b; } .icon-b { color: #3b82f6; } .icon-p { color: #8b5cf6; }
+
+/* Button */
+.enter-btn {
+  padding: 18px 40px;
+  background: #8c2f3c;
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 10px 30px rgba(140, 47, 60, 0.25);
+}
+.enter-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(140, 47, 60, 0.35); }
+
+/* RIGHT SIDE: Visual */
+.landing-visual {
+  flex: 1;
+  background: linear-gradient(135deg, #fff0f3 0%, #fff5fb 100%);
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-left: 1px solid rgba(255,255,255,0.5);
+}
+
+.visual-mascot {
+  width: 400px;
+  height: 400px;
+  object-fit: contain;
+  filter: drop-shadow(0 30px 60px rgba(140, 47, 60, 0.15));
+  z-index: 2;
+}
+
+.visual-glow {
+  position: absolute;
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(255, 143, 177, 0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(60px);
+}
+
+/* Floating Card Decoration */
+.float-card {
+  position: absolute;
+  top: 20%;
+  right: 15%;
+  background: white;
+  padding: 10px 16px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #444;
+  z-index: 5;
+}
+
+/* RESPONSIVE: Stack on Mobile */
+@media (max-width: 960px) {
+  .landing-glass-panel { flex-direction: column-reverse; max-width: 500px; height: auto; }
+  .landing-content { padding: 40px 30px; align-items: center; text-align: center; }
+  .landing-visual { min-height: 350px; border-left: none; border-bottom: 1px solid rgba(255,255,255,0.5); }
+  .landing-title { font-size: 2.5rem; }
+  .visual-mascot { width: 250px; height: 250px; }
+  .landing-stats { justify-content: center; flex-wrap: wrap; gap: 15px; }
+}

@@ -1,0 +1,168 @@
+/* --- Root & Global Transitions --- */
+:root {
+  --primary-sakura: #8c2f3c;
+  --accent-pink: #ff8fb1;
+  --glass-white: rgba(255, 255, 255, 0.45);
+  --apple-font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+}
+
+.auth-container {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #fffcf0 0%, #ffdde9 100%);
+  font-family: var(--apple-font);
+  overflow: hidden;
+}
+
+/* --- Left Side: Fluid Image Slider --- */
+.auth-left {
+  flex: 1.2;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  /* Squircle clipping for the image container */
+  clip-path: inset(20px 0px 20px 20px round 40px);
+}
+
+/* --- Right Side: Centered Glass Card --- */
+.auth-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 50px 40px;
+  background: var(--glass-white);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border-radius: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 25px 50px -12px rgba(140, 47, 60, 0.12);
+  text-align: center;
+}
+
+/* --- Typography --- */
+h2 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #1d1d1f;
+  letter-spacing: -0.03em;
+  margin-bottom: 30px;
+}
+
+/* --- Modern Inputs --- */
+.auth-input {
+  width: 100%;
+  padding: 16px 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.5);
+  font-size: 15px;
+  margin-bottom: 12px;
+  transition: all 0.3s ease;
+}
+
+.auth-input:focus {
+  background: white;
+  border-color: var(--accent-pink);
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(255, 143, 177, 0.15);
+}
+
+/* --- Premium Buttons --- */
+.social-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  margin-bottom: 25px;
+  font-weight: 600;
+  color: #1d1d1f;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.social-btn:active { transform: scale(0.97); }
+
+/* THIS IS THE FIX FOR THE GIANT GOOGLE LOGO */
+.social-btn img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 16px;
+  background: var(--primary-sakura);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 20px;
+  box-shadow: 0 10px 20px rgba(140, 47, 60, 0.2);
+  transition: all 0.3s ease;
+}
+
+.submit-btn:hover {
+  background: #732631;
+  transform: translateY(-2px);
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+  color: #86868b;
+  font-size: 13px;
+}
+
+.divider::before, .divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.05);
+  margin: 0 10px;
+}
+
+/* Footer Fix */
+.auth-footer {
+  margin-top: 20px;
+  font-size: 14px;
+  color: #666;
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  color: var(--primary-sakura);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.toggle-btn:hover {
+  text-decoration: underline;
+}
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 900px) {
+  .auth-left { display: none; } /* Hide image on mobile */
+  .auth-container { flex-direction: column; }
+  .auth-right { padding: 20px; }
+}

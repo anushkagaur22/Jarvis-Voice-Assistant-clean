@@ -1,0 +1,40 @@
+.voice-wave {
+  display: flex;
+  gap: 6px;
+  height: 28px;
+  align-items: flex-end;
+  margin-top: 6px;
+}
+
+.wave-bar {
+  width: 5px;
+  height: 10px;
+  border-radius: 4px;
+  transform-origin: bottom;
+  background: #7b2c4a;
+}
+
+/* Mode-based colors */
+.mode-friendly .wave-bar {
+  background: #ff7ab8;
+}
+
+.mode-creative .wave-bar {
+  background: #9b7bff;
+}
+
+.mode-professional .wave-bar {
+  background: #3a7bd5;
+}
+
+.mode-study .wave-bar {
+  background: #4caf50;
+}
+
+.mode-supportive .wave-bar {
+  background: #ffb703;
+}
+
+.mode-zippy .wave-bar {
+  background: #ff4fa3;
+}

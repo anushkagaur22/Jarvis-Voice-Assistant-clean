@@ -1,0 +1,21 @@
+.app-layout {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden; /* sidebar fixed */
+}
+
+.app-content {
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto;   /* ✅ ALLOW PAGE SCROLL */
+  /* overflow-x: hidden; */
+  margin-left: 110px;
+  background: transparent;
+}
+
+@media (max-width: 768px) {
+  .app-content {
+    margin-left: 0;
+  }
+}

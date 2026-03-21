@@ -1,0 +1,290 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+
+/* --- Page Layout --- */
+.personality-page {
+  width: 100%;
+  min-height: 100vh;
+  padding: 40px 20px 120px; /* Space for bottom bar */
+  font-family: 'Poppins', sans-serif;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+}
+
+.content-wrapper {
+  max-width: 1200px;
+  width: 100%;
+}
+
+/* --- Header --- */
+.personality-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.personality-header h1 {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #2d161a; /* Darker for better contrast */
+  margin-bottom: 12px;
+  letter-spacing: -1px;
+}
+
+.personality-header p {
+  font-size: 1.15rem;
+  color: #8c2f3c;
+  opacity: 0.8;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* --- Grid --- */
+.personality-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 32px;
+  padding: 10px; /* Space for hover shadows */
+}
+
+/* --- Premium Card --- */
+.personality-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 36px;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.04), inset 0 0 0 1px rgba(255,255,255,0.5);
+}
+
+.personality-card:hover {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 25px 50px rgba(140, 47, 60, 0.15); /* Colored shadow hint */
+  z-index: 10;
+}
+
+/* --- Active State --- */
+.personality-card.active {
+  background: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.12);
+}
+
+/* The Animated Selection Ring */
+.selection-ring {
+  position: absolute;
+  inset: -3px; /* Outside the card */
+  border-radius: 40px;
+  border: 3px solid var(--accent-color);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* --- Image & Content --- */
+.img-container {
+  width: 130px;
+  height: 130px;
+  margin-bottom: 20px;
+  z-index: 2;
+  /* Nice soft drop shadow on image */
+  filter: drop-shadow(0 15px 25px rgba(0,0,0,0.1));
+}
+
+.img-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.personality-card h3 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 8px;
+  z-index: 2;
+}
+
+.personality-card p {
+  font-size: 0.95rem;
+  color: #666;
+  margin-bottom: 24px;
+  line-height: 1.5;
+  z-index: 2;
+}
+
+/* --- Badge --- */
+.card-badge {
+  margin-top: auto;
+  z-index: 2;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.active-text {
+  color: var(--accent-color);
+  font-weight: 700;
+  font-size: 0.9rem;
+  background: rgba(var(--accent-color), 0.1); /* Fallback */
+  padding: 6px 16px;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.inactive-text {
+  font-size: 0.85rem;
+  color: #aaa;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* --- Bottom Confirm Bar --- */
+.bottom-action-bar {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2d161a; /* Dark bar for contrast */
+  padding: 12px 16px 12px 30px;
+  border-radius: 99px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+  z-index: 100;
+  color: white;
+  min-width: 320px;
+  justify-content: space-between;
+}
+
+.bottom-action-bar span {
+  font-size: 0.95rem;
+}
+
+.bottom-action-bar strong {
+  color: #ff8fb1; /* Pop of color */
+}
+
+.confirm-btn {
+  background: #ff8fb1;
+  color: #2d161a;
+  border: none;
+  padding: 12px 32px;
+  border-radius: 99px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.confirm-btn:hover {
+  transform: scale(1.05);
+  background: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .personality-header h1 { font-size: 2.2rem; }
+  .bottom-action-bar { width: 90%; bottom: 20px; }
+}
+/* ... Keep your existing grid/card styles ... */
+
+/* --- FLOATING CONFIRM BAR --- */
+.bottom-action-bar {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%) !important; /* Force center alignment */
+  
+  /* Premium Dark Glass Look */
+  background: rgba(30, 30, 30, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  
+  padding: 10px 10px 10px 28px; /* Padding logic: Left text space, Right button space */
+  border-radius: 99px;
+  
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+  
+  /* Deep, soft shadow to make it 'float' */
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 
+              0 0 0 1px rgba(255, 255, 255, 0.1);
+  
+  z-index: 1000;
+  min-width: 380px;
+  color: white;
+}
+
+/* "You selected..." Text */
+.bottom-action-bar span {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+}
+
+/* The Personality Name (Pink Highlight) */
+.bottom-action-bar strong {
+  color: #ff8fb1; /* Matches your Friendly mascot color */
+  font-weight: 700;
+  margin-left: 4px;
+}
+
+/* --- THE GRADIENT BUTTON --- */
+.confirm-btn {
+  /* Vibrant Gradient */
+  background: linear-gradient(135deg, #ff8fb1 0%, #ff5d8d 100%);
+  color: white;
+  
+  border: none;
+  padding: 12px 32px;
+  border-radius: 99px;
+  
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  
+  /* Button Glow */
+  box-shadow: 0 8px 20px rgba(255, 93, 141, 0.4);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.confirm-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 30px rgba(255, 93, 141, 0.6);
+  filter: brightness(1.1);
+}
+
+.confirm-btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+/* Mobile Tweak */
+@media (max-width: 600px) {
+  .bottom-action-bar {
+    width: 90%;
+    min-width: auto;
+    bottom: 20px;
+    padding: 10px 10px 10px 20px;
+    gap: 10px;
+  }
+  
+  .bottom-action-bar span {
+    font-size: 0.85rem;
+  }
+  
+  .confirm-btn {
+    padding: 10px 24px;
+    font-size: 0.9rem;
+  }
+}

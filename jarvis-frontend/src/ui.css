@@ -1,0 +1,51 @@
+.page {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.glass-card {
+  background: rgba(255, 210, 225, 0.55);
+  backdrop-filter: blur(25px);
+  border-radius: 36px;
+  padding: 48px;
+  box-shadow:
+    0 30px 80px rgba(0,0,0,0.18),
+    inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.hero-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.hero-title {
+  font-size: 52px;
+  color: #8c2f3c;
+}
+
+.hero-sub {
+  font-size: 18px;
+  opacity: 0.75;
+}
+
+.input-pill {
+  width: 420px;
+  padding: 16px 24px;
+  border-radius: 999px;
+  border: none;
+  outline: none;
+  font-size: 16px;
+}
+.mascot-talking {
+  animation: talk 0.4s infinite alternate;
+}
+
+@keyframes talk {
+  from { transform: scale(1) translateY(0); }
+  to { transform: scale(1.03) translateY(-2px); }
+}

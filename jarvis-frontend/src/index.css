@@ -1,0 +1,79 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+/* 🌈 FORCE GLOBAL APP BACKGROUND */
+body {
+  background: linear-gradient(
+    135deg,
+    #fff1c1 5%,
+    #ffd6e5 40%,
+    #ffe8f1 100%
+  );
+  font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow: hidden;
+}
+
+/* 🧊 Everything floats on top of background */
+.app-layout,
+.app-content,
+.page-root,
+.page-root-home-container,
+.page-root-chat,
+.page-root-personality-page,
+.jarvis-layout {
+  background: transparent !important;
+}
+/* 🔥 KILL ALL SEPARATOR LINES */
+.chat-input-wrap,
+.chat-input-container,
+.app-content,
+.page-root,
+.page-root-chat,
+.page-root-personality-page {
+  border-top: none !important;
+  box-shadow: none !important;
+}
+
+/* Also kill any fake overlay lines */
+.app-content::before,
+.app-content::after,
+.page-root::before,
+.page-root::after {
+  display: none !important;
+  content: none !important;
+}
+/* 🧨 CRITICAL: REMOVE DOUBLE BACKGROUNDS */
+.app-layout,
+.app-content,
+.page-root,
+.page-root-chat,
+.page-root-home-container,
+.page-root-personality-page,
+.chat-root,
+.jarvis-layout {
+  background: transparent !important;
+}
+
+/* 🧨 Prevent any fake separators */
+.app-layout::before,
+.app-layout::after,
+.app-content::before,
+.app-content::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* 🧨 Ensure only body owns the gradient */
+html, body, #root {
+  min-height: 100vh;
+}

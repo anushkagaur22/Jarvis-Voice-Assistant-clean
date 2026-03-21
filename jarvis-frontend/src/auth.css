@@ -1,0 +1,164 @@
+/* ===============================
+   EXACT PALETTE FROM SCREENSHOT
+================================ */
+:root {
+  --bg-main: #dff3ee;
+  --bg-right: #b7e4d8;
+
+  --card-bg: #ffffff;
+  --input-bg: #eef4ff;
+
+  --heading: #064e3b;
+  --text: #065f46;
+  --muted: #6b7280;
+
+  --check: #22c55e;
+  --button: #ff7a8a;
+}
+
+/* ===============================
+   PAGE LAYOUT
+================================ */
+.auth-page {
+  min-height: 100vh;
+  padding: 40px;
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 40px;
+
+  background: linear-gradient(
+    90deg,
+    var(--bg-main),
+    var(--bg-right)
+  );
+
+  font-family: "Inter", "Poppins", system-ui, sans-serif;
+}
+
+/* ===============================
+   LEFT CARD
+================================ */
+.auth-card {
+  background: var(--card-bg);
+  border-radius: 26px;
+  padding: 36px;
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.08);
+}
+
+.auth-card h2 {
+  margin: 0;
+  font-size: 28px;
+  color: var(--heading);
+}
+
+.auth-card .sub {
+  margin-top: 6px;
+  margin-bottom: 28px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* ===============================
+   INPUTS
+================================ */
+.auth-card input {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: none;
+  background: var(--input-bg);
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+
+.auth-card input:focus {
+  outline: 2px solid #c7d2fe;
+}
+
+/* ===============================
+   BUTTON
+================================ */
+.auth-card button {
+  width: 100%;
+  padding: 14px;
+  border-radius: 16px;
+  border: none;
+  background: var(--button);
+  color: white;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+.auth-card button:hover {
+  opacity: 0.95;
+}
+
+/* ===============================
+   LINKS & ERRORS
+================================ */
+.auth-card a {
+  color: var(--button);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.error {
+  font-size: 12px;
+  color: #dc2626;
+  margin-bottom: 8px;
+}
+
+/* ===============================
+   RIGHT PANEL
+================================ */
+.auth-info {
+  background: transparent;
+  border-radius: 30px;
+  padding: 60px 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.auth-info h3 {
+  font-size: 30px;
+  color: var(--heading);
+  margin-bottom: 28px;
+}
+
+.auth-info ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.auth-info li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+  font-size: 16px;
+  color: var(--text);
+}
+
+.auth-info li::before {
+  content: "✓";
+  color: var(--check);
+  font-weight: 700;
+}
+
+/* ===============================
+   MOBILE
+================================ */
+@media (max-width: 900px) {
+  .auth-page {
+    grid-template-columns: 1fr;
+    padding: 20px;
+  }
+
+  .auth-info {
+    display: none;
+  }
+}

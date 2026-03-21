@@ -1,0 +1,81 @@
+/* --- Global Auth Container --- */
+.auth-layout-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.1), transparent),
+              var(--bg-dark); /* Premium dark base */
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  overflow: hidden;
+  position: relative;
+}
+
+/* --- Apple-style Glassmorphic Card (The Squircle) --- */
+.auth-card-apple {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  width: 900px;
+  height: 600px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(25px) saturate(180%);
+  -webkit-backdrop-filter: blur(25px) saturate(180%);
+  border-radius: 28px; /* Apple Squircle radius */
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  z-index: 10;
+}
+
+/* --- Left Panel Styling --- */
+.auth-left-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.01), transparent);
+  border-right: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.premium-mascot {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  margin-bottom: 24px;
+}
+
+/* --- Refined Float Animation --- */
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(2deg); } /* Slower, weighted motion */
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+.floating {
+  animation: float 5s ease-in-out infinite; /* Standard Apple physics */
+}
+
+/* --- Premium Typography --- */
+.premium-header {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -1.2px;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.premium-subtext {
+  font-size: 1rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+  max-width: 300px;
+}
+
+/* --- Mobile Stack --- */
+@media (max-width: 800px) {
+  .auth-card-apple { grid-template-columns: 1fr; height: auto; padding: 20px; }
+  .auth-left-panel { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.04); }
+}
