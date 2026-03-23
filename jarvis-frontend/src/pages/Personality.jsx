@@ -2,13 +2,19 @@ import React, { useState, useEffect } from "react";
 import { useJarvisMode } from "../context/JarvisModeContext";
 import { motion, AnimatePresence } from "framer-motion";
 import "./Personality.css";
+import friendly from "../assets/avatars/friendly.png";
+import creative from "../assets/avatars/creative.png";
+import professional from "../assets/avatars/professional.png";
+import study from "../assets/avatars/study.png";
+import supportive from "../assets/avatars/supportive.png";
+import zippy from "../assets/avatars/zippy.png";
 
 const MODES = [
   { 
     id: "friendly", 
     label: "Friendly", 
     desc: "Warm, supportive & always kind.",
-    img: "/src/assets/avatars/friendly.png",
+    img: friendly,
     color: "#ff8fb1",
     bg: "linear-gradient(135deg, #fff0f3 0%, #ffe6ea 100%)"
   },
@@ -16,7 +22,7 @@ const MODES = [
     id: "creative", 
     label: "Creative", 
     desc: "Wild ideas & artistic inspiration.",
-    img: "/src/assets/avatars/creative.png", 
+    img: creative,
     color: "#a0d2eb",
     bg: "linear-gradient(135deg, #f0f8ff 0%, #e6f2ff 100%)"
   },
@@ -24,7 +30,7 @@ const MODES = [
     id: "professional", 
     label: "Professional", 
     desc: "Concise, data-driven & efficient.",
-    img: "/src/assets/avatars/professional.png",
+    img: professional,
     color: "#7b2c4a",
     bg: "linear-gradient(135deg, #f9f0f2 0%, #eee0e5 100%)"
   },
@@ -32,7 +38,7 @@ const MODES = [
     id: "study", 
     label: "Study Buddy", 
     desc: "Focused on facts & learning.",
-    img: "/src/assets/avatars/study.png",
+    img: study,
     color: "#97c1a9",
     bg: "linear-gradient(135deg, #f0f9f4 0%, #e6f5ed 100%)"
   },
@@ -40,7 +46,7 @@ const MODES = [
     id: "supportive", 
     label: "Supportive", 
     desc: "Empathetic listener for tough days.",
-    img: "/src/assets/avatars/supportive.png",
+    img: supportive,
     color: "#e5b3fe",
     bg: "linear-gradient(135deg, #f8f0ff 0%, #f2e6ff 100%)"
   },
@@ -48,12 +54,11 @@ const MODES = [
     id: "zippy", 
     label: "Zippy", 
     desc: "Fast, witty & high energy.",
-    img: "/src/assets/avatars/zippy.png",
+    img: zippy,
     color: "#ffabab",
     bg: "linear-gradient(135deg, #fff0f0 0%, #ffe6e6 100%)"
   },
 ];
-
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {

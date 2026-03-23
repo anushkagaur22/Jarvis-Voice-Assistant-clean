@@ -5,7 +5,8 @@ import ImageSlider from "./ImageSlider1";
 import AuthMascot from "./AuthMascot";
 import "./Auth.css";
 
-const API = "http://localhost:8000";
+// ✅ FIX: use env instead of localhost
+const API = import.meta.env.VITE_API_URL;
 
 const AuthContainer = ({ initialMode = "login" }) => {
   const [isLogin, setIsLogin] = useState(initialMode === "login");
@@ -24,6 +25,7 @@ const AuthContainer = ({ initialMode = "login" }) => {
   /* ---------------- AUTO LOGIN ---------------- */
   useEffect(() => {
     const token = localStorage.getItem("token");
+
     if (token) {
       navigate("/landing");
     }
@@ -86,11 +88,15 @@ const AuthContainer = ({ initialMode = "login" }) => {
         return;
       }
 
-      // ✅ SAVE TOKEN
+      // ✅🔥 FIX 1: SAVE BOTH TOKENS
       localStorage.setItem("token", data.access_token);
+      localStorage.setItem("refresh_token", data.refresh_token);
+
+      // ✅ DEBUG (optional)
+      console.log("TOKEN SAVED:", data.access_token);
 
       // ✅ Redirect
-      window.location.href = "/landing";
+      window.location.href = "/app/chat";
 
     } catch (err) {
       console.error("ERROR:", err);
@@ -194,7 +200,7 @@ const AuthContainer = ({ initialMode = "login" }) => {
               className="auth-input"
               value={formData.password}
               onChange={handleChange}
-              maxLength={72}   // 🔥 FIX
+              maxLength={72}
               required
             />
 

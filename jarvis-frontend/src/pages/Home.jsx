@@ -6,7 +6,7 @@ import {
   Terminal, ShieldCheck, ArrowRight, Sparkles 
 } from "lucide-react";
 import "./Home.css";
-
+import mascot from "../assets/mascot.png";
 // Animation Variants
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -121,7 +121,7 @@ export default function Home() {
         >
           <motion.div className="glow-circle" animate={floatAnimation} />
           <motion.img 
-            src="/src/assets/mascot.png" // Ensure this path exists!
+            src={mascot} // Ensure this path exists!
             alt="Jarvis" 
             className="mascot-img"
             animate={floatAnimation}
