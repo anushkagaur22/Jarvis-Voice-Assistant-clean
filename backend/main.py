@@ -5,6 +5,8 @@ from sqlalchemy import func
 from datetime import datetime, timedelta
 from pydantic import BaseModel
 from fastapi.responses import RedirectResponse
+from dotenv import load_dotenv
+load_dotenv()
 
 from database import get_db, engine
 from models import Base, User, Conversation, Message, ProductivitySnapshot, Memory
@@ -12,9 +14,10 @@ from auth import (
     get_current_user,
     verify_password,
     hash_password,
-    create_access_token
+    create_access_token,
+    create_refresh_token,   # ✅ ADDED
+    verify_refresh_token    # ✅ ADDED
 )
-
 from integrations.github import get_github_stats
 from integrations.leetcode import get_leetcode_stats
 from performance.scoring import calculate_performance_score
@@ -93,10 +96,33 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
     if not verify_password(data.password, user.password):
         raise HTTPException(401, "Invalid password")
 
-    token = create_access_token({"user_id": user.id})
+    access_token = create_access_token({"user_id": user.id})
+    refresh_token = create_refresh_token(user.id)  # ✅ now works
 
-    return {"access_token": token, "token_type": "bearer"}
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
+    }
 
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+
+
+
+@app.post("/refresh")
+def refresh_token(req: RefreshRequest):
+    user_id = verify_refresh_token(req.refresh_token)
+
+    if not user_id:
+        raise HTTPException(401, "Invalid refresh token")
+
+    new_access = create_access_token({"user_id": user_id})
+
+    return {
+        "access_token": new_access
+    }
 @app.get("/auth/google")
 def google_login():
     return RedirectResponse("https://accounts.google.com/o/oauth2/v2/auth")

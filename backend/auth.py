@@ -71,3 +71,35 @@ def get_current_user(
         raise HTTPException(status_code=401, detail="User not found")
 
     return user
+
+from datetime import datetime, timedelta
+import uuid
+
+REFRESH_TOKEN_EXPIRE_DAYS = 7
+
+# store refresh tokens (simple version)
+refresh_tokens_db = {}
+
+def create_refresh_token(user_id: int):
+    token = str(uuid.uuid4())
+    expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+
+    refresh_tokens_db[token] = {
+        "user_id": user_id,
+        "expires": expire
+    }
+
+    return token
+
+
+def verify_refresh_token(token: str):
+    data = refresh_tokens_db.get(token)
+
+    if not data:
+        return None
+
+    if data["expires"] < datetime.utcnow():
+        del refresh_tokens_db[token]
+        return None
+
+    return data["user_id"]
