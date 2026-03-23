@@ -6,17 +6,6 @@ function getToken() {
   return localStorage.getItem("token");
 }
 
-function getRefreshToken() {
-  return localStorage.getItem("refresh_token");
-}
-
-function setToken(token) {
-  localStorage.setItem("token", token);
-}
-
-function setRefreshToken(token) {
-  localStorage.setItem("refresh_token", token);
-}
 
 function logout() {
   localStorage.clear();
@@ -25,32 +14,8 @@ function logout() {
 
 // ---------------- REFRESH TOKEN ----------------
 
-async function refreshAccessToken() {
-  const refresh = getRefreshToken();
-
-  if (!refresh) return false;
-
-  const r = await fetch(`${API}/refresh`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      refresh_token: refresh
-    })
-  });
-
-  if (!r.ok) return false;
-
-  const data = await r.json();
-
-  setToken(data.access_token);
-
-  return true;
-}
 
 // ---------------- AUTH FETCH WRAPPER ----------------
-
 async function authFetch(endpoint, options = {}) {
   const token = getToken();
 
@@ -58,26 +23,18 @@ async function authFetch(endpoint, options = {}) {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+      Authorization: token ? `Bearer ${token}` : "",
       ...(options.headers || {})
     }
   });
 
-  // Token expired → try refresh
   if (response.status === 401) {
-    const refreshed = await refreshAccessToken();
-
-    if (refreshed) {
-      return authFetch(endpoint, options);
-    } else {
-      logout();
-      return;
-    }
+    logout(); // simple and correct
+    return;
   }
 
   return response;
 }
-
 // ---------------- Conversations ----------------
 
 export async function getConversations() {
