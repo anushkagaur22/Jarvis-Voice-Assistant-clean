@@ -15,12 +15,20 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
-
 def hash_password(password: str):
+    if not password:
+        raise ValueError("Password required")
+
+    password = str(password).strip()
+    password = password[:72]   # 🔥 CRITICAL FIX
+
     return pwd_context.hash(password)
 
 
 def verify_password(plain_password, hashed_password):
+    plain_password = str(plain_password).strip()
+    plain_password = plain_password[:72]   # 🔥 SAME FIX
+
     return pwd_context.verify(plain_password, hashed_password)
 
 

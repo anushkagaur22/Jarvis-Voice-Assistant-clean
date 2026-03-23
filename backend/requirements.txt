@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+pydantic
+sqlalchemy
+python-dotenv
+requests
+httpx
+openai
+passlib[bcrypt]
+python-jose
+pymysql
+cryptography
+bcrypt==4.0.1

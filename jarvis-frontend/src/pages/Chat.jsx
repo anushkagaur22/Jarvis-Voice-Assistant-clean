@@ -11,7 +11,7 @@ import { MODES } from "../data/modes";
 
 import "./Chat.css";
 
-const API = "http://127.0.0.1:8000";
+const API = "http://localhost:8000";
 
 const SUGGESTIONS = [
   "Explain Quantum Physics ⚛️",
@@ -32,27 +32,27 @@ export default function Chat() {
   const [input, setInput] = useState("");
   const [status, setStatus] = useState("idle");
 
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token")?.trim();
 
   /* ---------------- AUTH ---------------- */
-
   useEffect(() => {
     if (!token) navigate("/login");
   }, [token, navigate]);
 
-  /* ---------------- LOAD HISTORY ---------------- */
-
+  /* ---------------- LOAD HISTORY (FIXED) ---------------- */
   useEffect(() => {
     if (!id) return;
 
     const loadConversation = async () => {
       try {
+        // ✅ FIX: correct endpoint
         const res = await fetch(`${API}/conversations/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
 
+        // ✅ FIX: handle 401
         if (res.status === 401) {
           localStorage.removeItem("token");
           navigate("/login");
@@ -76,16 +76,14 @@ export default function Chat() {
 
     loadConversation();
 
-  }, [id]);
+  }, [id, token, navigate]);
 
   /* ---------------- AUTO SCROLL ---------------- */
-
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   /* ---------------- VOICE OUTPUT ---------------- */
-
   const speak = (text) => {
     if (!window.speechSynthesis) return;
 
@@ -100,7 +98,6 @@ export default function Chat() {
   };
 
   /* ---------------- VOICE INPUT ---------------- */
-
   const startListening = () => {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -129,8 +126,7 @@ export default function Chat() {
     setStatus("idle");
   };
 
-  /* ---------------- SEND MESSAGE ---------------- */
-
+  /* ---------------- SEND MESSAGE (FIXED) ---------------- */
   const send = async (text) => {
 
     const msg = text || input;
@@ -152,7 +148,7 @@ export default function Chat() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}` // ✅ FIX
         },
         body: JSON.stringify({
           message: msg,
@@ -160,9 +156,20 @@ export default function Chat() {
         })
       });
 
+      // ✅ FIX: handle 401 properly
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        navigate("/login");
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error("Server error");
+      }
+
       const data = await res.json();
 
-      // ✅ FIX: update route if new conversation
+      // ✅ FIX: new conversation routing
       if (!id && data.conversation_id) {
         navigate(`/app/chat/${data.conversation_id}`);
       }
@@ -190,13 +197,11 @@ export default function Chat() {
   };
 
   /* ---------------- UI ---------------- */
-
   return (
     <div className="chat-screen">
 
       <div className="chat-column">
 
-        {/* HEADER */}
         <div className="chat-header-glass">
 
           <div className="header-mascot-wrapper">
@@ -221,7 +226,6 @@ export default function Chat() {
 
         </div>
 
-        {/* CHAT HISTORY */}
         <div className="chat-history">
 
           {messages.length === 0 && (
@@ -262,7 +266,6 @@ export default function Chat() {
 
         </div>
 
-        {/* INPUT */}
         <div className="input-container">
 
           <form

@@ -27,7 +27,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=["*"],  # for now (later restrict)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -109,21 +109,42 @@ def chat(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    if req.conversation_id:
-        convo = db.query(Conversation).filter(Conversation.id == req.conversation_id).first()
+    try:
+        if req.conversation_id:
+            convo = db.query(Conversation).filter(
+                Conversation.id == req.conversation_id
+            ).first()
 
-        if not convo:
-            raise HTTPException(status_code=404, detail="Conversation not found")
+            if not convo:
+                raise HTTPException(404, "Conversation not found")
 
-        if convo.user_id != current_user.id:
-            raise HTTPException(status_code=403, detail="Unauthorized access")
+            if convo.user_id != current_user.id:
+                raise HTTPException(403, "Unauthorized")
 
-    else:
-        # Create new conversation if no ID provided
-        convo = Conversation(user_id=current_user.id, title="New Chat")
-        db.add(convo)
+        else:
+            convo = Conversation(user_id=current_user.id, title="New Chat")
+            db.add(convo)
+            db.commit()
+            db.refresh(convo)
+
+        db.add(Message(conversation_id=convo.id, role="user", content=req.message))
         db.commit()
-        db.refresh(convo)
+
+        # 🔥 SAFE AI CALL
+        try:
+            reply = ask_ai([{"role": "user", "content": req.message}])
+        except Exception as e:
+            print("AI ERROR:", e)
+            reply = "AI is temporarily unavailable."
+
+        db.add(Message(conversation_id=convo.id, role="assistant", content=reply))
+        db.commit()
+
+        return {"reply": reply, "conversation_id": convo.id}
+
+    except Exception as e:
+        print("CHAT ERROR:", e)
+        raise HTTPException(status_code=500, detail=str(e))
 
     # Save User Message
     db.add(Message(conversation_id=convo.id, role="user", content=req.message))

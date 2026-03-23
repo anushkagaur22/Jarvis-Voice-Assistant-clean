@@ -5,7 +5,7 @@ import ImageSlider from "./ImageSlider1";
 import AuthMascot from "./AuthMascot";
 import "./Auth.css";
 
-const API = "http://127.0.0.1:8000";
+const API = "http://localhost:8000";
 
 const AuthContainer = ({ initialMode = "login" }) => {
   const [isLogin, setIsLogin] = useState(initialMode === "login");
@@ -35,7 +35,7 @@ const AuthContainer = ({ initialMode = "login" }) => {
     setError("");
   };
 
-  /* ---------------- GOOGLE LOGIN (TEMP SAFE) ---------------- */
+  /* ---------------- GOOGLE LOGIN ---------------- */
   const handleGoogleLogin = () => {
     alert("Google login coming soon 🚀");
   };
@@ -47,20 +47,34 @@ const AuthContainer = ({ initialMode = "login" }) => {
     setLoading(true);
     setError("");
 
+    // 🔥 Validation
+    if (!formData.username.trim() || !formData.password.trim()) {
+      setError("Email and password are required");
+      setLoading(false);
+      return;
+    }
+
     try {
       const endpoint = isLogin ? "login" : "signup";
+
+      const payload = isLogin
+        ? {
+            email: formData.username.trim(),
+            password: formData.password.trim(),
+          }
+        : {
+            email: formData.username.trim(),
+            password: formData.password.trim(),
+            github_username: formData.github_username.trim(),
+            leetcode_username: formData.leetcode_username.trim(),
+          };
 
       const res = await fetch(`${API}/${endpoint}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          email: formData.username,
-          password: formData.password,
-          github_username: formData.github_username,
-          leetcode_username: formData.leetcode_username,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -72,25 +86,14 @@ const AuthContainer = ({ initialMode = "login" }) => {
         return;
       }
 
-      /* ---------------- LOGIN ---------------- */
-      if (isLogin) {
-        localStorage.setItem("token", data.access_token);
+      // ✅ SAVE TOKEN
+      localStorage.setItem("token", data.access_token);
 
-        // ✅ FIX: force app to re-read token
-        window.location.href = "/landing";
-      }
-
-      /* ---------------- SIGNUP ---------------- */
-      else {
-        // backend should return token (auto login)
-        localStorage.setItem("token", data.access_token);
-
-        // ✅ same fix
-        window.location.href = "/landing";
-      }
+      // ✅ Redirect
+      window.location.href = "/landing";
 
     } catch (err) {
-      console.error(err);
+      console.error("ERROR:", err);
       setError("Server error. Try again.");
     } finally {
       setLoading(false);
@@ -191,6 +194,7 @@ const AuthContainer = ({ initialMode = "login" }) => {
               className="auth-input"
               value={formData.password}
               onChange={handleChange}
+              maxLength={72}   // 🔥 FIX
               required
             />
 
