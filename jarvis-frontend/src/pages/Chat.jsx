@@ -11,7 +11,8 @@ import { MODES } from "../data/modes";
 
 import "./Chat.css";
 
-const API = "http://localhost:8000";
+// ✅ FIXED: Using Environment Variable for deployed backend
+const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 const SUGGESTIONS = [
   "Explain Quantum Physics ⚛️",
@@ -41,18 +42,26 @@ export default function Chat() {
 
   /* ---------------- LOAD HISTORY (FIXED) ---------------- */
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      setMessages([]); // Clear messages if starting a new chat
+      return;
+    }
 
     const loadConversation = async () => {
       try {
-        // ✅ FIX: correct endpoint
         const res = await fetch(`${API}/conversations/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
 
-        // ✅ FIX: handle 401
+        // ✅ FIX: Handle 404 properly if chat was deleted
+        if (res.status === 404) {
+          console.warn("Conversation not found. Redirecting to new chat.");
+          navigate("/app/chat");
+          return;
+        }
+
         if (res.status === 401) {
           localStorage.removeItem("token");
           navigate("/login");
@@ -129,7 +138,7 @@ export default function Chat() {
   /* ---------------- SEND MESSAGE (FIXED) ---------------- */
   const send = async (text) => {
 
-    const msg = text || input;
+    const msg = typeof text === "string" ? text : input;
     if (!msg.trim()) return;
 
     const userMsg = {
@@ -143,12 +152,11 @@ export default function Chat() {
     setStatus("thinking");
 
     try {
-
       const res = await fetch(`${API}/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}` // ✅ FIX
+          Authorization: `Bearer ${token}` 
         },
         body: JSON.stringify({
           message: msg,
@@ -156,7 +164,6 @@ export default function Chat() {
         })
       });
 
-      // ✅ FIX: handle 401 properly
       if (res.status === 401) {
         localStorage.removeItem("token");
         navigate("/login");
@@ -169,12 +176,11 @@ export default function Chat() {
 
       const data = await res.json();
 
-      // ✅ FIX: new conversation routing
+      // ✅ FIX: Route to the newly created conversation ID
       if (!id && data.conversation_id) {
-        navigate(`/app/chat/${data.conversation_id}`);
+        navigate(`/app/chat/${data.conversation_id}`, { replace: true });
       }
 
-      // ✅ AUTO MODE SWITCH
       if (data.mode) {
         setMode(data.mode);
       }
@@ -186,7 +192,6 @@ export default function Chat() {
       };
 
       setMessages(prev => [...prev, botMsg]);
-
       speak(data.reply);
 
     } catch (err) {

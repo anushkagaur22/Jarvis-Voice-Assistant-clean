@@ -15,8 +15,8 @@ from auth import (
     verify_password,
     hash_password,
     create_access_token,
-    create_refresh_token,   # ✅ ADDED
-    verify_refresh_token    # ✅ ADDED
+    create_refresh_token,
+    verify_refresh_token
 )
 from integrations.github import get_github_stats
 from integrations.leetcode import get_leetcode_stats
@@ -30,7 +30,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # for now (later restrict)
+    allow_origins=["*"],  # for now (later restrict to your Vercel domain)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -61,6 +61,9 @@ class SettingsRequest(BaseModel):
     voiceInput: bool | None = None
     voiceRate: float | None = None
     apiKey: str | None = None
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
 
 # ---------------- AUTH ----------------
 
@@ -97,19 +100,13 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(401, "Invalid password")
 
     access_token = create_access_token({"user_id": user.id})
-    refresh_token = create_refresh_token(user.id)  # ✅ now works
+    refresh_token = create_refresh_token(user.id)
 
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
         "token_type": "bearer"
     }
-
-class RefreshRequest(BaseModel):
-    refresh_token: str
-
-
-
 
 @app.post("/refresh")
 def refresh_token(req: RefreshRequest):
@@ -123,6 +120,7 @@ def refresh_token(req: RefreshRequest):
     return {
         "access_token": new_access
     }
+
 @app.get("/auth/google")
 def google_login():
     return RedirectResponse("https://accounts.google.com/o/oauth2/v2/auth")
@@ -136,6 +134,7 @@ def chat(
     db: Session = Depends(get_db)
 ):
     try:
+        # 1. Resolve or Create Conversation
         if req.conversation_id:
             convo = db.query(Conversation).filter(
                 Conversation.id == req.conversation_id
@@ -153,58 +152,49 @@ def chat(
             db.commit()
             db.refresh(convo)
 
+        # 2. Save User Message immediately
         db.add(Message(conversation_id=convo.id, role="user", content=req.message))
         db.commit()
 
-        # 🔥 SAFE AI CALL
+        # 3. Extract and Save Memory (if applicable)
+        memory = extract_memory(req.message)
+        if memory:
+            key, value = memory
+            save_memory(db, current_user.id, key, value)
+
+        # 4. Build AI Context (Load Memory + Chat History)
+        memory_context = get_memory_context(db, current_user.id)
+        
+        # Fetch the last 20 messages for this specific conversation
+        history = db.query(Message).filter(
+            Message.conversation_id == convo.id
+        ).order_by(Message.id.asc()).limit(20).all()
+
+        messages = []
+        if memory_context:
+            messages.append({"role": "system", "content": f"User info:\n{memory_context}"})
+
+        for m in history:
+            messages.append({"role": m.role, "content": m.content})
+
+        # 5. Safe AI Call using the FULL history
         try:
-            reply = ask_ai([{"role": "user", "content": req.message}])
+            reply = ask_ai(messages)
         except Exception as e:
             print("AI ERROR:", e)
             reply = "AI is temporarily unavailable."
 
+        # 6. Save AI Response
         db.add(Message(conversation_id=convo.id, role="assistant", content=reply))
         db.commit()
 
         return {"reply": reply, "conversation_id": convo.id}
 
+    except HTTPException:
+        raise
     except Exception as e:
         print("CHAT ERROR:", e)
         raise HTTPException(status_code=500, detail=str(e))
-
-    # Save User Message
-    db.add(Message(conversation_id=convo.id, role="user", content=req.message))
-    db.commit()
-
-    # Memory Save
-    memory = extract_memory(req.message)
-    if memory:
-        key, value = memory
-        save_memory(db, current_user.id, key, value)
-
-    # Memory Load
-    memory_context = get_memory_context(db, current_user.id)
-
-    # Load Chat History
-    history = db.query(Message).filter(
-        Message.conversation_id == convo.id
-    ).order_by(Message.id.asc()).limit(20).all()
-
-    messages = []
-    if memory_context:
-        messages.append({"role": "system", "content": f"User info:\n{memory_context}"})
-
-    for m in history:
-        messages.append({"role": m.role, "content": m.content})
-
-    # AI Request
-    reply = ask_ai(messages)
-
-    # Save AI Message
-    db.add(Message(conversation_id=convo.id, role="assistant", content=reply))
-    db.commit()
-
-    return {"reply": reply, "conversation_id": convo.id}
 
 # ---------------- HISTORY ----------------
 
@@ -307,7 +297,6 @@ def dashboard_summary(
         "productivity_score": latest.productivity_score
     }
 
-# ✅ FIXED: Routes are now /dashboard/weekly and /dashboard/heatmap to match React
 @app.get("/dashboard/weekly")
 def get_weekly_trend(
     current_user: User = Depends(get_current_user),

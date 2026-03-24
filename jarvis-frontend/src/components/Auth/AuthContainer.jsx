@@ -95,8 +95,9 @@ const AuthContainer = ({ initialMode = "login" }) => {
       // ✅ DEBUG (optional)
       console.log("TOKEN SAVED:", data.access_token);
 
-      // ✅ Redirect
-      window.location.href = "/app/chat";
+    
+     // ✅ Redirect to Landing Page
+      window.location.href = "/landing";
 
     } catch (err) {
       console.error("ERROR:", err);
