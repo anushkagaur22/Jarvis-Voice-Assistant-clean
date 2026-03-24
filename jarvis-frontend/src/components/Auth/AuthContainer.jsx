@@ -8,6 +8,10 @@ import "./Auth.css";
 // ✅ FIX: use env instead of localhost
 const API = import.meta.env.VITE_API_URL;
 
+const handleGoogleLogin = () => {
+  window.location.href = `${API}/auth/google`;
+};
+
 const AuthContainer = ({ initialMode = "login" }) => {
   const [isLogin, setIsLogin] = useState(initialMode === "login");
   const [loading, setLoading] = useState(false);
@@ -36,12 +40,6 @@ const AuthContainer = ({ initialMode = "login" }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError("");
   };
-
-  /* ---------------- GOOGLE LOGIN ---------------- */
-  const handleGoogleLogin = () => {
-    alert("Google login coming soon 🚀");
-  };
-
   /* ---------------- SUBMIT ---------------- */
   const handleSubmit = async (e) => {
     e.preventDefault();

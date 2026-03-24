@@ -37,7 +37,9 @@ app.add_middleware(
 )
 
 Base.metadata.create_all(bind=engine)
-
+@app.get("/")
+def read_root():
+    return {"status": "Jarvis Backend is successfully running!"}
 # ---------------- SCHEMAS ----------------
 
 class SignupRequest(BaseModel):
@@ -121,9 +123,55 @@ def refresh_token(req: RefreshRequest):
         "access_token": new_access
     }
 
+from authlib.integrations.starlette_client import OAuth
+from fastapi import Request
+from fastapi.responses import RedirectResponse
+import os
+
+oauth = OAuth()
+
+oauth.register(
+    name="google",
+    client_id=os.getenv("GOOGLE_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+    client_kwargs={"scope": "openid email profile"},
+)
+
+# 🔹 STEP 1: redirect to Google
 @app.get("/auth/google")
-def google_login():
-    return RedirectResponse("https://accounts.google.com/o/oauth2/v2/auth")
+async def google_login(request: Request):
+    redirect_uri = request.url_for("google_callback")
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+
+# 🔹 STEP 2: callback
+@app.get("/auth/google/callback")
+async def google_callback(request: Request, db: Session = Depends(get_db)):
+    token = await oauth.google.authorize_access_token(request)
+    user_info = token.get("userinfo")
+
+    email = user_info.get("email")
+
+    # 🔥 check user
+    user = db.query(User).filter(User.email == email).first()
+
+    if not user:
+        user = User(email=email, password="google_user")
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    # 🔥 create tokens
+    access_token = create_access_token({"user_id": user.id})
+    refresh_token = create_refresh_token(user.id)
+
+    # 🔥 redirect to frontend
+    FRONTEND_URL = "https://jarvisvoiceassistant220.vercel.app"
+
+    return RedirectResponse(
+        url=f"{FRONTEND_URL}/auth-success?token={access_token}&refresh={refresh_token}"
+    )
 
 # ---------------- CHAT ----------------
 

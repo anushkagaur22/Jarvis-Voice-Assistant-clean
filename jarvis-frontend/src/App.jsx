@@ -36,6 +36,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
 
+    <Route path="/auth-success" element={<AuthSuccess />} />
       {/* Landing */}
       <Route
         path="/landing"

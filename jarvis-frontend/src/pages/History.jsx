@@ -3,8 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import "./History.css";
 
-// ✅ FIXED: Using Environment Variable for deployed backend
-const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const API = import.meta.env.VITE_API_URL;
 
 export default function History() {
   const [conversations, setConversations] = useState([]);
@@ -12,18 +11,16 @@ export default function History() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  /* ---------------- FETCH HISTORY ---------------- */
-
   useEffect(() => {
     const fetchConversations = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
       try {
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-          navigate("/login");
-          return;
-        }
-
         const res = await fetch(`${API}/conversations`, {
           headers: {
             Authorization: `Bearer ${token}`
@@ -31,7 +28,7 @@ export default function History() {
         });
 
         if (res.status === 401) {
-          localStorage.removeItem("token");
+          localStorage.clear();
           navigate("/login");
           return;
         }
@@ -39,7 +36,6 @@ export default function History() {
         if (!res.ok) throw new Error("Failed to load history");
 
         const data = await res.json();
-
         setConversations(Array.isArray(data) ? data : []);
 
       } catch (err) {
@@ -52,44 +48,14 @@ export default function History() {
     fetchConversations();
   }, [navigate]);
 
-  /* ---------------- SAFE NAVIGATION ---------------- */
-
-  const openChat = async (chatId) => {
-    const token = localStorage.getItem("token");
-
-    try {
-      const res = await fetch(`${API}/conversations/${chatId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      // 🔥 FIX: HANDLE 404 BEFORE NAVIGATING
-      if (res.status === 404) {
-        alert("⚠️ This conversation no longer exists");
-        return;
-      }
-
-      if (res.status === 401) {
-        localStorage.removeItem("token");
-        navigate("/login");
-        return;
-      }
-
-      navigate(`/app/chat/${chatId}`);
-
-    } catch (err) {
-      console.error("Open chat error:", err);
-    }
+  /* 🔥 FIX: REMOVE PRE-FETCH (CAUSE OF GLITCH) */
+  const openChat = (chatId) => {
+    navigate(`/app/chat/${chatId}`);
   };
-
-  /* ---------------- FILTER ---------------- */
 
   const filtered = conversations.filter((c) =>
     (c.title || "Untitled").toLowerCase().includes(query.toLowerCase())
   );
-
-  /* ---------------- UI ---------------- */
 
   return (
     <div className="history-page">
@@ -134,7 +100,7 @@ export default function History() {
               <motion.div
                 key={chat.id}
                 className="history-card"
-                onClick={() => openChat(chat.id)} 
+                onClick={() => openChat(chat.id)}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 whileHover={{ scale: 1.01, y: -2 }}
@@ -143,7 +109,6 @@ export default function History() {
 
                 <div className="card-top">
                   <h3>{chat.title || "New Conversation"}</h3>
-
                   <span className="date-badge">
                     {chat.updated_at
                       ? new Date(chat.updated_at).toLocaleDateString()

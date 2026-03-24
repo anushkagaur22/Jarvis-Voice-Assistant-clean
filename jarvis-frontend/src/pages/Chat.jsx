@@ -6,12 +6,11 @@ import { useJarvisMode } from "../context/JarvisModeContext";
 import Mascot from "../components/Mascot";
 import MessageBubble from "../components/MessageBubble";
 
-import { Mic, Square, Send } from "lucide-react";
+import { Mic, Square, Send, Loader2 } from "lucide-react"; // ✅ Added Loader2 icon
 import { MODES } from "../data/modes";
 
 import "./Chat.css";
 
-// ✅ FIXED: Using Environment Variable for deployed backend
 const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 const SUGGESTIONS = [
@@ -32,6 +31,9 @@ export default function Chat() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [status, setStatus] = useState("idle");
+  
+  // ✅ NEW: Add a loading state for history fetching
+  const [isLoadingHistory, setIsLoadingHistory] = useState(!!id); 
 
   const token = localStorage.getItem("token")?.trim();
 
@@ -40,14 +42,16 @@ export default function Chat() {
     if (!token) navigate("/login");
   }, [token, navigate]);
 
-  /* ---------------- LOAD HISTORY (FIXED) ---------------- */
+  /* ---------------- LOAD HISTORY (GLITCH FIXED) ---------------- */
   useEffect(() => {
     if (!id) {
-      setMessages([]); // Clear messages if starting a new chat
+      setMessages([]); 
+      setIsLoadingHistory(false); // No ID means new chat, stop loading immediately
       return;
     }
 
     const loadConversation = async () => {
+      setIsLoadingHistory(true); // Start loading
       try {
         const res = await fetch(`${API}/conversations/${id}`, {
           headers: {
@@ -55,7 +59,6 @@ export default function Chat() {
           }
         });
 
-        // ✅ FIX: Handle 404 properly if chat was deleted
         if (res.status === 404) {
           console.warn("Conversation not found. Redirecting to new chat.");
           navigate("/app/chat");
@@ -80,6 +83,8 @@ export default function Chat() {
 
       } catch (err) {
         console.error("Load error:", err);
+      } finally {
+        setIsLoadingHistory(false); // ✅ Stop loading once done
       }
     };
 
@@ -135,7 +140,7 @@ export default function Chat() {
     setStatus("idle");
   };
 
-  /* ---------------- SEND MESSAGE (FIXED) ---------------- */
+  /* ---------------- SEND MESSAGE ---------------- */
   const send = async (text) => {
 
     const msg = typeof text === "string" ? text : input;
@@ -176,7 +181,6 @@ export default function Chat() {
 
       const data = await res.json();
 
-      // ✅ FIX: Route to the newly created conversation ID
       if (!id && data.conversation_id) {
         navigate(`/app/chat/${data.conversation_id}`, { replace: true });
       }
@@ -233,7 +237,12 @@ export default function Chat() {
 
         <div className="chat-history">
 
-          {messages.length === 0 && (
+          {/* ✅ FIXED: Only show empty state if NOT loading history */}
+         {isLoadingHistory ? (
+  <div className="chat-loading">
+    <Loader2 size={32} className="spinner" />
+  </div>
+) : messages.length === 0 ? (
             <motion.div className="empty-state">
               <h2 className="empty-title">How can I help you?</h2>
 
@@ -245,19 +254,19 @@ export default function Chat() {
                 ))}
               </div>
             </motion.div>
+          ) : (
+            <AnimatePresence>
+              {messages.map((m, i) => (
+                <motion.div key={i} className={`chat-row ${m.role}`}>
+                  <MessageBubble
+                    role={m.role}
+                    content={m.content}
+                    animate={m.animate !== false}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
           )}
-
-          <AnimatePresence>
-            {messages.map((m, i) => (
-              <motion.div key={i} className={`chat-row ${m.role}`}>
-                <MessageBubble
-                  role={m.role}
-                  content={m.content}
-                  animate={m.animate !== false}
-                />
-              </motion.div>
-            ))}
-          </AnimatePresence>
 
           {status === "thinking" && (
             <div className="chat-row assistant">
@@ -296,9 +305,10 @@ export default function Chat() {
               placeholder="Message Jarvis..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              disabled={isLoadingHistory} // ✅ Prevent typing before history loads
             />
 
-            <button type="submit" className="action-btn send-btn">
+            <button type="submit" className="action-btn send-btn" disabled={isLoadingHistory}>
               <Send size={18} />
             </button>
 
