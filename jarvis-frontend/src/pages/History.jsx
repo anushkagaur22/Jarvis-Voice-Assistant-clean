@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import "./History.css";
 
-const API = "http://127.0.0.1:8000";
+// ✅ FIXED: Using Environment Variable for deployed backend
+const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 export default function History() {
   const [conversations, setConversations] = useState([]);
@@ -133,7 +134,7 @@ export default function History() {
               <motion.div
                 key={chat.id}
                 className="history-card"
-                onClick={() => openChat(chat.id)} // 🔥 FIXED HERE
+                onClick={() => openChat(chat.id)} 
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 whileHover={{ scale: 1.01, y: -2 }}
