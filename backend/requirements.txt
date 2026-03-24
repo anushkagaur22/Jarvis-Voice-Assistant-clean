@@ -11,3 +11,4 @@ python-jose
 pymysql
 cryptography
 bcrypt==4.0.1
+authlib
