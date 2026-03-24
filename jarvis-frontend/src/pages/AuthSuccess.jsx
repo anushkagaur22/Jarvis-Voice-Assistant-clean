@@ -10,9 +10,12 @@ export default function AuthSuccess() {
     const token = params.get("token");
     const refresh = params.get("refresh");
 
+    console.log("TOKEN:", token); // debug
+
     if (token) {
       localStorage.setItem("token", token);
       localStorage.setItem("refresh_token", refresh);
+
       navigate("/app/chat");
     } else {
       navigate("/login");
