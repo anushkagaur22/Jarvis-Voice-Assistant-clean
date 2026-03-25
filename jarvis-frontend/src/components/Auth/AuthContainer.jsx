@@ -5,12 +5,15 @@ import ImageSlider from "./ImageSlider1";
 import AuthMascot from "./AuthMascot";
 import "./Auth.css";
 
-// ✅ FIX: use env instead of localhost
-const API = import.meta.env.VITE_API_URL;
+// ✅ FIX: Added a fallback AND a `.replace` to automatically remove accidental trailing slashes!
+const RAW_API = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const API = RAW_API.replace(/\/$/, "");
 
 const handleGoogleLogin = () => {
   window.location.href = `${API}/auth/google`;
 };
+
+// ... keep the rest of AuthContainer the exact same!
 
 const AuthContainer = ({ initialMode = "login" }) => {
   const [isLogin, setIsLogin] = useState(initialMode === "login");
