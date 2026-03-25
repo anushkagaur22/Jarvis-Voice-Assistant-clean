@@ -4,7 +4,6 @@ from sqlalchemy.orm import relationship
 from database import Base
 from datetime import datetime
 
-
 # ---------------- USER ----------------
 
 class User(Base):
@@ -16,7 +15,6 @@ class User(Base):
 
     github_username = Column(String(255))
     leetcode_username = Column(String(255))
-
 
 # ---------------- CHAT ----------------
 
@@ -31,12 +29,13 @@ class Conversation(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
+    # 🔥 FIXED: The relationship block is now correctly inside the class!
     messages = relationship(
         "Message",
         back_populates="conversation",
-        cascade="all, delete"
+        cascade="all, delete",
+        lazy="selectin"
     )
-
 
 class Message(Base):
     __tablename__ = "messages"
@@ -50,7 +49,6 @@ class Message(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     conversation = relationship("Conversation", back_populates="messages")
-
 
 # ---------------- PRODUCTIVITY ----------------
 
@@ -83,10 +81,3 @@ class Memory(Base):
     value = Column(Text)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    
-messages = relationship(
-    "Message",
-    back_populates="conversation",
-    cascade="all, delete",
-    lazy="selectin"   # 🔥 REQUIRED
-)

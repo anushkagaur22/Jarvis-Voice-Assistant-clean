@@ -1,13 +1,23 @@
-from fastapi import FastAPI, Depends, HTTPException
+import os
+from datetime import datetime
+from dotenv import load_dotenv
+
+# FastAPI & Starlette Imports
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
+from pydantic import BaseModel
+from starlette.middleware.sessions import SessionMiddleware
+
+# Database & Authlib Imports
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from datetime import datetime, timedelta
-from pydantic import BaseModel
-from fastapi.responses import RedirectResponse
-from dotenv import load_dotenv
+from authlib.integrations.starlette_client import OAuth
+
+# Load environment variables first
 load_dotenv()
 
+# Local Application Imports
 from database import get_db, engine
 from models import Base, User, Conversation, Message, ProductivitySnapshot, Memory
 from auth import (
@@ -24,22 +34,44 @@ from performance.scoring import calculate_performance_score
 from ai import ask_ai
 from memory_service import save_memory, get_memory_context, extract_memory
 
-# ---------------- APP ----------------
+# ---------------- APP INITIALIZATION ----------------
 
 app = FastAPI()
 
+# ✅ 1. SESSION MUST COME FIRST
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=os.getenv("SESSION_SECRET", "jarvis-super-secret-session-key")
+)
+
+# ✅ 2. THEN CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # for now (later restrict to your Vercel domain)
+    allow_origins=[
+        "https://jarvisvoiceassistant220.vercel.app",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# ✅ 3. THEN DATABASE
 Base.metadata.create_all(bind=engine)
-@app.get("/")
-def read_root():
-    return {"status": "Jarvis Backend is successfully running!"}
+
+
+# ---------------- OAUTH (GOOGLE) SETUP ----------------
+
+oauth = OAuth()
+oauth.register(
+    name="google",
+    client_id=os.getenv("GOOGLE_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+    client_kwargs={"scope": "openid email profile"},
+)
+
 # ---------------- SCHEMAS ----------------
 
 class SignupRequest(BaseModel):
@@ -67,14 +99,19 @@ class SettingsRequest(BaseModel):
 class RefreshRequest(BaseModel):
     refresh_token: str
 
-# ---------------- AUTH ----------------
+# ---------------- ROOT ----------------
+
+@app.get("/")
+def read_root():
+    return {"status": "Jarvis Backend is successfully running!"}
+
+# ---------------- AUTH ROUTES ----------------
 
 @app.post("/signup")
 def signup(data: SignupRequest, db: Session = Depends(get_db)):
     existing = db.query(User).filter(User.email == data.email).first()
-
     if existing:
-        raise HTTPException(400, "User already exists")
+        raise HTTPException(status_code=400, detail="User already exists")
 
     user = User(
         email=data.email,
@@ -82,24 +119,21 @@ def signup(data: SignupRequest, db: Session = Depends(get_db)):
         github_username=data.github_username,
         leetcode_username=data.leetcode_username
     )
-
     db.add(user)
     db.commit()
     db.refresh(user)
 
     token = create_access_token({"user_id": user.id})
-
     return {"access_token": token, "token_type": "bearer"}
+
 
 @app.post("/login")
 def login(data: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == data.email).first()
-
     if not user:
-        raise HTTPException(404, "User not found")
-
+        raise HTTPException(status_code=404, detail="User not found")
     if not verify_password(data.password, user.password):
-        raise HTTPException(401, "Invalid password")
+        raise HTTPException(status_code=401, detail="Invalid password")
 
     access_token = create_access_token({"user_id": user.id})
     refresh_token = create_refresh_token(user.id)
@@ -110,50 +144,32 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
         "token_type": "bearer"
     }
 
+
 @app.post("/refresh")
 def refresh_token(req: RefreshRequest):
     user_id = verify_refresh_token(req.refresh_token)
-
     if not user_id:
-        raise HTTPException(401, "Invalid refresh token")
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
 
     new_access = create_access_token({"user_id": user_id})
+    return {"access_token": new_access}
 
-    return {
-        "access_token": new_access
-    }
 
-from authlib.integrations.starlette_client import OAuth
-from fastapi import Request
-from fastapi.responses import RedirectResponse
-import os
-
-oauth = OAuth()
-
-oauth.register(
-    name="google",
-    client_id=os.getenv("GOOGLE_CLIENT_ID"),
-    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
-    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
-    client_kwargs={"scope": "openid email profile"},
-)
-
-# 🔹 STEP 1: redirect to Google
 @app.get("/auth/google")
 async def google_login(request: Request):
     redirect_uri = request.url_for("google_callback")
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 
-# 🔹 STEP 2: callback
 @app.get("/auth/google/callback")
 async def google_callback(request: Request, db: Session = Depends(get_db)):
     token = await oauth.google.authorize_access_token(request)
     user_info = token.get("userinfo")
 
-    email = user_info.get("email")
+    if not user_info or not user_info.get("email"):
+        raise HTTPException(status_code=400, detail="Failed to fetch user info from Google")
 
-    # 🔥 check user
+    email = user_info["email"]
     user = db.query(User).filter(User.email == email).first()
 
     if not user:
@@ -162,18 +178,15 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(user)
 
-    # 🔥 create tokens
     access_token = create_access_token({"user_id": user.id})
     refresh_token = create_refresh_token(user.id)
 
-    # 🔥 redirect to frontend
-    FRONTEND_URL = "https://jarvisvoiceassistant220.vercel.app"
-
+    FRONTEND_URL = os.getenv("FRONTEND_URL", "https://jarvisvoiceassistant220.vercel.app")
     return RedirectResponse(
         url=f"{FRONTEND_URL}/auth-success?token={access_token}&refresh={refresh_token}"
     )
 
-# ---------------- CHAT ----------------
+# ---------------- CHAT ROUTES ----------------
 
 @app.post("/chat")
 def chat(
@@ -182,38 +195,31 @@ def chat(
     db: Session = Depends(get_db)
 ):
     try:
-        # 1. Resolve or Create Conversation
         if req.conversation_id:
             convo = db.query(Conversation).filter(
                 Conversation.id == req.conversation_id
             ).first()
-
             if not convo:
-                raise HTTPException(404, "Conversation not found")
-
+                raise HTTPException(status_code=404, detail="Conversation not found")
             if convo.user_id != current_user.id:
-                raise HTTPException(403, "Unauthorized")
-
+                raise HTTPException(status_code=403, detail="Unauthorized")
         else:
             convo = Conversation(user_id=current_user.id, title="New Chat")
             db.add(convo)
             db.commit()
             db.refresh(convo)
 
-        # 2. Save User Message immediately
         db.add(Message(conversation_id=convo.id, role="user", content=req.message))
         db.commit()
 
-        # 3. Extract and Save Memory (if applicable)
+        # Memory extraction & retrieval
         memory = extract_memory(req.message)
         if memory:
             key, value = memory
             save_memory(db, current_user.id, key, value)
 
-        # 4. Build AI Context (Load Memory + Chat History)
         memory_context = get_memory_context(db, current_user.id)
-        
-        # Fetch the last 20 messages for this specific conversation
+
         history = db.query(Message).filter(
             Message.conversation_id == convo.id
         ).order_by(Message.id.asc()).limit(20).all()
@@ -221,18 +227,15 @@ def chat(
         messages = []
         if memory_context:
             messages.append({"role": "system", "content": f"User info:\n{memory_context}"})
-
         for m in history:
             messages.append({"role": m.role, "content": m.content})
 
-        # 5. Safe AI Call using the FULL history
         try:
             reply = ask_ai(messages)
         except Exception as e:
             print("AI ERROR:", e)
             reply = "AI is temporarily unavailable."
 
-        # 6. Save AI Response
         db.add(Message(conversation_id=convo.id, role="assistant", content=reply))
         db.commit()
 
@@ -244,7 +247,7 @@ def chat(
         print("CHAT ERROR:", e)
         raise HTTPException(status_code=500, detail=str(e))
 
-# ---------------- HISTORY ----------------
+# ---------------- CONVERSATION ROUTES ----------------
 
 @app.get("/conversations")
 def list_conversations(
@@ -277,6 +280,7 @@ def list_conversations(
 
     return result
 
+
 @app.get("/conversations/{conversation_id}")
 def get_conversation(
     conversation_id: int,
@@ -297,7 +301,7 @@ def get_conversation(
 
     return {"id": convo.id, "title": convo.title, "messages": messages}
 
-# ---------------- PERFORMANCE / DASHBOARD ----------------
+# ---------------- PERFORMANCE / DASHBOARD ROUTES ----------------
 
 @app.post("/performance/sync")
 def sync_productivity(
@@ -317,7 +321,6 @@ def sync_productivity(
         leetcode_solved=solved,
         productivity_score=score
     )
-
     db.add(snapshot)
     db.commit()
 
@@ -326,6 +329,7 @@ def sync_productivity(
         "leetcode_solved": solved,
         "productivity_score": score
     }
+
 
 @app.get("/dashboard/summary")
 def dashboard_summary(
@@ -337,7 +341,7 @@ def dashboard_summary(
     ).order_by(ProductivitySnapshot.created_at.desc()).first()
 
     if not latest:
-        return {"message": "No data"}
+        return {"message": "No data yet. Run /performance/sync first."}
 
     return {
         "github_commits": latest.github_commits,
@@ -345,56 +349,54 @@ def dashboard_summary(
         "productivity_score": latest.productivity_score
     }
 
+
 @app.get("/dashboard/weekly")
 def get_weekly_trend(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Fetch the last 7 days of productivity snapshots
     recent_snapshots = db.query(ProductivitySnapshot).filter(
         ProductivitySnapshot.user_id == current_user.id
     ).order_by(ProductivitySnapshot.created_at.desc()).limit(7).all()
 
-    # Format for Recharts area chart
-    trend_data = []
-    for snap in reversed(recent_snapshots): # Reverse so chronological order
-        trend_data.append({
+    trend_data = [
+        {
             "date": snap.created_at.isoformat(),
             "score": snap.productivity_score
-        })
-        
-    # Provide mock data if the user is brand new so the chart isn't empty
+        }
+        for snap in reversed(recent_snapshots)
+    ]
+
     if not trend_data:
         return [{"date": str(datetime.now().date()), "score": 0}]
 
     return trend_data
+
 
 @app.get("/dashboard/heatmap")
 def get_heatmap_data(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # Fetch all snapshots to populate the heatmap grid
     snapshots = db.query(ProductivitySnapshot).filter(
         ProductivitySnapshot.user_id == current_user.id
     ).all()
-    
-    heatmap = []
-    for snap in snapshots:
-        # Determine color intensity based on score (1 to 4)
-        intensity = 1
-        if snap.productivity_score > 20: intensity = 2
-        if snap.productivity_score > 50: intensity = 3
-        if snap.productivity_score > 80: intensity = 4
-            
-        heatmap.append({
-            "date": snap.created_at.date().isoformat(),
-            "count": intensity 
-        })
-        
-    return heatmap
 
-# ---------------- SETTINGS ----------------
+    def score_to_intensity(score: float) -> int:
+        if score > 80: return 4
+        if score > 50: return 3
+        if score > 20: return 2
+        return 1
+
+    return [
+        {
+            "date": snap.created_at.date().isoformat(),
+            "count": score_to_intensity(snap.productivity_score)
+        }
+        for snap in snapshots
+    ]
+
+# ---------------- SETTINGS ROUTES ----------------
 
 @app.get("/settings")
 def get_settings(
@@ -403,6 +405,7 @@ def get_settings(
 ):
     settings = db.query(Memory).filter(Memory.user_id == current_user.id).all()
     return {s.key: s.value for s in settings}
+
 
 @app.post("/settings")
 def save_settings(
