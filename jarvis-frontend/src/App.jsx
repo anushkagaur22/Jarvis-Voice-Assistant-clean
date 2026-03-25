@@ -1,5 +1,6 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
+
 import AppLayout from "./layouts/AppLayout";
 import AuthSuccess from "./pages/AuthSuccess";
 import Login from "./pages/Login";
@@ -13,19 +14,14 @@ import Settings from "./pages/Settings";
 import Dashboard from "./pages/Dashboard";
 
 export default function App() {
-  const [token, setToken] = useState(localStorage.getItem("token"));
+  const [token, setToken] = useState(null);
+  const location = useLocation();
 
-  // 🔥 Re-check token whenever route changes
+  // ✅ Always sync token on route change
   useEffect(() => {
-    const checkToken = () => {
-      setToken(localStorage.getItem("token"));
-    };
-
-    window.addEventListener("storage", checkToken);
-    checkToken();
-
-    return () => window.removeEventListener("storage", checkToken);
-  }, []);
+    const storedToken = localStorage.getItem("token");
+    setToken(storedToken);
+  }, [location]);
 
   const isAuthenticated = !!token;
 
@@ -36,7 +32,9 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
 
-    <Route path="/auth-success" element={<AuthSuccess />} />
+      {/* 🔥 IMPORTANT: allow auth-success ALWAYS */}
+      <Route path="/auth-success" element={<AuthSuccess />} />
+
       {/* Landing */}
       <Route
         path="/landing"
@@ -57,6 +55,7 @@ export default function App() {
         <Route path="dashboard" element={<Dashboard />} />
       </Route>
 
+      {/* fallback */}
       <Route path="*" element={<Navigate to="/login" />} />
     </Routes>
   );

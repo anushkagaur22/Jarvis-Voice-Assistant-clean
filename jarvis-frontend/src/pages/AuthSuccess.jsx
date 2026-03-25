@@ -5,22 +5,40 @@ export default function AuthSuccess() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // 🔍 Get tokens from URL
     const params = new URLSearchParams(window.location.search);
-
     const token = params.get("token");
     const refresh = params.get("refresh");
 
-    console.log("TOKEN:", token); // debug
+    console.log("TOKEN:", token);
 
     if (token) {
-      localStorage.setItem("token", token);
-      localStorage.setItem("refresh_token", refresh);
+      try {
+        // ✅ Save tokens
+        localStorage.setItem("token", token);
+        if (refresh) {
+          localStorage.setItem("refresh_token", refresh);
+        }
 
-      navigate("/landing");
+        // ✅ Small delay (fixes Vercel timing issues)
+        setTimeout(() => {
+          navigate("/landing", { replace: true });
+        }, 100);
+
+      } catch (error) {
+        console.error("Storage error:", error);
+        navigate("/login", { replace: true });
+      }
     } else {
-      navigate("/login");
+      // ❌ No token → go back to login
+      navigate("/login", { replace: true });
     }
-  }, []);
+  }, [navigate]);
 
-  return <h2>Logging you in...</h2>;
+  return (
+    <div style={{ textAlign: "center", marginTop: "50px" }}>
+      <h2>Logging you in...</h2>
+      <p>Please wait while we set things up 🚀</p>
+    </div>
+  );
 }
