@@ -16,7 +16,7 @@ export default function AuthSuccess() {
       localStorage.setItem("token", token);
       localStorage.setItem("refresh_token", refresh);
 
-      navigate("/app/chat");
+      navigate("/landing");
     } else {
       navigate("/login");
     }
